@@ -95,7 +95,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 
 		// Change the baudrate
 		char msg[64];
-		sprintf(msg, SBF_CONFIG_BAUDRATE, baudrate);
+		snprintf(msg, sizeof(msg), SBF_CONFIG_BAUDRATE, baudrate);
 
 		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
 			continue;
@@ -110,16 +110,16 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 
 
 		if (_dynamic_model < 6) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "low");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "low");
 
 		} else if (_dynamic_model < 7) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
 
 		} else if (_dynamic_model < 8) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "high");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "high");
 
 		} else {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "max");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
 		}
 
 		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
