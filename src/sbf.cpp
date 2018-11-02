@@ -40,7 +40,6 @@
  *
 */
 
-#include <mathlib/mathlib.h>
 #include "sbf.h"
 
 #define SBF_CONFIG_TIMEOUT    200        // ms, timeout for waiting ACK
@@ -95,7 +94,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 
 		// Change the baudrate
 		char msg[64];
-		sprintf(msg, SBF_CONFIG_BAUDRATE, baudrate);
+		snprintf(msg, sizeof(msg), SBF_CONFIG_BAUDRATE, baudrate);
 
 		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
 			continue;
@@ -110,16 +109,16 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 
 
 		if (_dynamic_model < 6) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "low");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "low");
 
 		} else if (_dynamic_model < 7) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
 
 		} else if (_dynamic_model < 8) {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "high");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "high");
 
 		} else {
-			sprintf(msg, SBF_CONFIG_RECEIVER_DYNAMICS, "max");
+			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
 		}
 
 		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
@@ -469,8 +468,15 @@ GPSDriverSBF::payloadRxDone()
 	case SBF_ID_VelCovGeodetic:
 		SBF_TRACE_RXMSG("Rx VelCovGeodetic");
 		_msg_status |= 2;
-		_gps_position->s_variance_m_s = math::max(math::max(_buf.payload_vel_col_geodetic.cov_ve_ve,
-						_buf.payload_vel_col_geodetic.cov_vn_vn), _buf.payload_vel_col_geodetic.cov_vu_vu);
+		_gps_position->s_variance_m_s = _buf.payload_vel_col_geodetic.cov_ve_ve;
+
+		if (_gps_position->s_variance_m_s < _buf.payload_vel_col_geodetic.cov_vn_vn) {
+			_gps_position->s_variance_m_s = _buf.payload_vel_col_geodetic.cov_vn_vn;
+		}
+
+		if (_gps_position->s_variance_m_s < _buf.payload_vel_col_geodetic.cov_vu_vu) {
+			_gps_position->s_variance_m_s = _buf.payload_vel_col_geodetic.cov_vu_vu;
+		}
 		break;
 
 	case SBF_ID_DOP:
