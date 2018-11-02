@@ -477,6 +477,7 @@ GPSDriverSBF::payloadRxDone()
 		if (_gps_position->s_variance_m_s < _buf.payload_vel_col_geodetic.cov_vu_vu) {
 			_gps_position->s_variance_m_s = _buf.payload_vel_col_geodetic.cov_vu_vu;
 		}
+
 		break;
 
 	case SBF_ID_DOP:
