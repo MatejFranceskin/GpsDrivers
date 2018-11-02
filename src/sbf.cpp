@@ -96,7 +96,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 		char msg[64];
 		snprintf(msg, sizeof(msg), SBF_CONFIG_BAUDRATE, baudrate);
 
-		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
+		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
 			continue;
 		}
 
@@ -121,7 +121,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
 		}
 
-		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
+		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
 			continue;
 		}
 
@@ -135,7 +135,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			if (msg[i++] == '\n') {
 				msg[i] = 0;
 
-				if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT, false)) {
+				if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
 					break;
 				}
 
@@ -159,7 +159,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 }
 
 bool
-GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const unsigned timeout, const bool report)
+GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const unsigned timeout)
 {
 	// Send message
 	int length = strlen(msg);
@@ -172,7 +172,7 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const unsigned timeout, 
 	// For all valid set -, get - and exe -commands, the first line of the reply is an exact copy
 	// of the command as entered by the user, preceded with "$R:"
 	char buf[GPS_READ_BUFFER_SIZE];
-	int ret = read(reinterpret_cast<uint8_t *>(buf), sizeof(buf), SBF_PACKET_TIMEOUT);
+	int ret = read(reinterpret_cast<uint8_t *>(buf), sizeof(buf), timeout);
 
 	if (ret < 0) {
 		// something went wrong when polling or reading
