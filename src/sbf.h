@@ -295,7 +295,7 @@ public:
 
 	int receive(unsigned timeout) override;
 
-	int configure(unsigned &baudrate, OutputMode output_mode) override;
+    int configure(unsigned &baudrate, OutputMode output_mode) override;
 
 private:
 
@@ -323,7 +323,7 @@ private:
 	 * Send a message and waits for acknowledge
 	 * @return true on success, false on write error (errno set) or ack wait timeout
 	 */
-	bool sendMessageAndWaitForAck(const char *msg, const unsigned timeout);
+    bool sendMessageAndWaitForAck(const char *msg, const int timeout);
 
 	struct vehicle_gps_position_s *_gps_position { nullptr };
 	struct satellite_info_s *_satellite_info { nullptr };

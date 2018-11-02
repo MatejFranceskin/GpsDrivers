@@ -76,16 +76,16 @@ GPSDriverSBF::~GPSDriverSBF()
 int
 GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 {
-	unsigned baud_i;
+    unsigned baud_i;
 
 	_configured = false;
 	_output_mode = output_mode;
 	// try different baudrates
-	const unsigned baudrates[] = {9600, 38400, 19200, 57600, 115200, 230400};
+    const unsigned baudrates[] = {9600, 38400, 19200, 57600, 115200, 230400};
 
 	for (baud_i = 0; baud_i < sizeof(baudrates) / sizeof(baudrates[0]); baud_i++) {
 		baudrate = baudrates[baud_i];
-		setBaudrate(baudrate);
+        setBaudrate(baudrate);
 
 		// flush input and wait for at least 20 ms silence
 		decodeInit();
@@ -159,14 +159,14 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 }
 
 bool
-GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const unsigned timeout)
+GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 {
 	// Send message
-	int length = strlen(msg);
+    int length = strlen(msg);
 
 	if (write(msg, length) != length) {
 		return false;
-	}
+    }
 
 	// Wait for acknowledge
 	// For all valid set -, get - and exe -commands, the first line of the reply is an exact copy
@@ -326,9 +326,6 @@ GPSDriverSBF::parseChar(const uint8_t b)
 
 		ret = 0;
 		break;
-
-	default:
-		break;
 	}
 
 	return ret;
@@ -341,7 +338,7 @@ int    // -1 = error, 0 = ok, 1 = payload completed
 GPSDriverSBF::payloadRxAdd(const uint8_t b)
 {
 	int ret = 0;
-	uint8_t *p_buf = (uint8_t *)&_buf;
+    uint8_t *p_buf = reinterpret_cast<uint8_t *>(&_buf);
 
 	p_buf[_rx_payload_index] = b;
 
@@ -364,7 +361,7 @@ crc16(uint8_t *data_p, uint16_t length)
 	while (length--) {
 		x = crc >> 8 ^ *data_p++;
 		x ^= x >> 4;
-		crc = (crc << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x << 5)) ^ ((uint16_t)x);
+        crc = static_cast<uint16_t>((crc << 8) ^ (x << 12) ^ (x << 5) ^ x);
 	}
 
 	return crc;
@@ -381,7 +378,7 @@ GPSDriverSBF::payloadRxDone()
 	time_t epoch;
 	uint8_t *buf_ptr;
 
-	if (_crc != crc16((uint8_t *) &_buf, _rx_payload_length)) {
+    if (_crc != crc16(reinterpret_cast<uint8_t *>(&_buf), _rx_payload_length)) {
 		return 1;
 	}
 
@@ -410,22 +407,22 @@ GPSDriverSBF::payloadRxDone()
 		_gps_position->vel_ned_valid = _gps_position->fix_type > 1 && _buf.payload_pvt_geodetic.error == 0;
 		_gps_position->satellites_used = _buf.payload_pvt_geodetic.nr_sv;
 
-		_gps_position->lat = (float)_buf.payload_pvt_geodetic.latitude * M_RAD_TO_DEG_F;
-		_gps_position->lon = (float)_buf.payload_pvt_geodetic.longitude * M_RAD_TO_DEG_F;
-		_gps_position->alt_ellipsoid = _buf.payload_pvt_geodetic.height;
-		_gps_position->alt = _gps_position->alt_ellipsoid - _buf.payload_pvt_geodetic.undulation;
+        _gps_position->lat = static_cast<int>(round(_buf.payload_pvt_geodetic.latitude * M_RAD_TO_DEG * 1e7));
+        _gps_position->lon = static_cast<int>(round(_buf.payload_pvt_geodetic.longitude * M_RAD_TO_DEG * 1e7));
+        _gps_position->alt_ellipsoid = static_cast<int>(round(_buf.payload_pvt_geodetic.height * 1000));
+        _gps_position->alt = static_cast<int>(round((_buf.payload_pvt_geodetic.height - static_cast<double>(_buf.payload_pvt_geodetic.undulation)) * 1000));
 
-		_gps_position->eph = (float)_buf.payload_pvt_geodetic.h_accuracy / 100.0f;
-		_gps_position->epv = (float)_buf.payload_pvt_geodetic.v_accuracy / 100.0f;
+        _gps_position->eph = static_cast<float>(_buf.payload_pvt_geodetic.h_accuracy) / 100.0f;
+        _gps_position->epv = static_cast<float>(_buf.payload_pvt_geodetic.v_accuracy) / 100.0f;
 
-		_gps_position->vel_n_m_s = (float)_buf.payload_pvt_geodetic.vn;
-		_gps_position->vel_e_m_s = (float)_buf.payload_pvt_geodetic.ve;
-		_gps_position->vel_d_m_s = -(float)_buf.payload_pvt_geodetic.vu;
+        _gps_position->vel_n_m_s = static_cast<float>(_buf.payload_pvt_geodetic.vn);
+        _gps_position->vel_e_m_s = static_cast<float>(_buf.payload_pvt_geodetic.ve);
+        _gps_position->vel_d_m_s = static_cast<float>(_buf.payload_pvt_geodetic.vu);
 		_gps_position->vel_m_s = sqrtf(_gps_position->vel_n_m_s * _gps_position->vel_n_m_s +
-					       _gps_position->vel_e_m_s * _gps_position->vel_e_m_s);
+                           _gps_position->vel_e_m_s * _gps_position->vel_e_m_s);
 
-		_gps_position->cog_rad = (float)_buf.payload_pvt_geodetic.cog * M_DEG_TO_RAD_F;
-		_gps_position->c_variance_rad = (float)1 * M_DEG_TO_RAD_F * 1e-5f;
+        _gps_position->cog_rad = static_cast<float>(_buf.payload_pvt_geodetic.cog) * M_DEG_TO_RAD_F;
+        _gps_position->c_variance_rad = 1.0f * M_DEG_TO_RAD_F * 1e-5f;
 
 		_gps_position->time_utc_usec = 0;
 #ifndef NO_MKTIME
@@ -498,8 +495,8 @@ GPSDriverSBF::payloadRxDone()
 			sbf_payload_channel_sat_info_t *sat_info = reinterpret_cast<sbf_payload_channel_sat_info_t *>(buf_ptr);
 			_satellite_info->svid[i] = sat_info->svid;
 			_satellite_info->used[i] = (sat_info->health_status == 1) ? 1 : 0;
-			_satellite_info->elevation[i] = sat_info->elevation;
-			_satellite_info->azimuth[i] = sat_info->azimuth & ((1 << 9) - 1);
+            _satellite_info->elevation[i] = static_cast<uint8_t>(sat_info->elevation);
+            _satellite_info->azimuth[i] = static_cast<uint8_t>(sat_info->azimuth & ((1 << 9) - 1));
 			_satellite_info->snr[i] = 0;
 			buf_ptr += _buf.payload_channel_status.sb1_length + sat_info->n2 * _buf.payload_channel_status.sb2_length;
 		}
@@ -512,7 +509,7 @@ GPSDriverSBF::payloadRxDone()
 	}
 
 	if (ret > 0) {
-		_gps_position->timestamp_time_relative = (int32_t)(_last_timestamp_time - _gps_position->timestamp);
+        _gps_position->timestamp_time_relative = static_cast<int32_t>(_last_timestamp_time - _gps_position->timestamp);
 	}
 
 	return ret;
