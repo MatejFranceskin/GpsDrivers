@@ -52,11 +52,13 @@
 	"setSatelliteUsage, All\n" \
 	"setElevationMask, All, 10\n" \
 	"setSBFOutput, all, COM1, none, off\n" \
-	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec50\n" \
-	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, OnChange\n" \
-	"setSBFOutput, Stream3, COM1, ChannelStatus, OnChange\n"
+	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n" \
+	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
+	"setSBFOutput, Stream2, Dsk1, Event+Comment, OnChange\n"
 
-#define SBF_CONFIG_BAUDRATE "setCOMSettings, COM2, baud%d\n"
+#define SBF_CONFIG_BAUDRATE "setCOMSettings, COM1, baud%d\n"
 
 #define SBF_CONFIG_RECEIVER_DYNAMICS "setReceiverDynamics, %s, UAV\n"
 
@@ -246,6 +248,13 @@ typedef struct {
 /* General message and payload buffer union */
 
 typedef struct {
+	uint16_t sync;              /** The Sync field is a 2-byte array always set to 0x24, 0x40. The first byte of every SBF block has
+									hexadecimal value 24 (decimal 36, ASCII ’$’). The second byte of every SBF block has hexadecimal
+									value 40 (decimal 64, ASCII ’@’). */
+	uint16_t crc16;				/** The CRC field is the 16-bit CRC of all the bytes in an SBF block from and including the ID field
+									to the last byte of the block. The generator polynomial for this CRC is the so-called CRC-CCITT
+									polynomial: x 16 + x 12 + x 5 + x 0 . The CRC is computed in the forward direction using a seed of 0, no
+									reverse and no final XOR. */
 	uint16_t msg_id: 13;        /** The ID ﬁeld is a 2-byte block ID, which uniquely identiﬁes the block type and its contents */
 	uint8_t msg_revision: 3;    /** block revision number, starting from 0 at the initial block deﬁnition, and incrementing
                                     each time backwards - compatible changes are performed to the block  */
@@ -254,7 +263,7 @@ typedef struct {
                                     It is always a multiple of 4. */
 	uint32_t TOW;               /**< Time-Of-Week: Time-tag, expressed in whole milliseconds from
                                      the beginning of the current Galileo/GPSweek. */
-	uint8_t  WNc;               /**< The GPS week number associated with the TOW. WNc is a continuous
+	uint16_t WNc;               /**< The GPS week number associated with the TOW. WNc is a continuous
                                      weekcount (hence the "c"). It is not affected by GPS week roll overs,
                                      which occur every 1024 weeks. By deﬁnition of the Galileo system time,
                                      WNc is also the Galileo week number + 1024. */
@@ -264,6 +273,8 @@ typedef struct {
 		sbf_payload_dop_t payload_dop;
 		sbf_payload_channel_status_t payload_channel_status;
 	};
+
+	uint8_t padding[16];
 } sbf_buf_t;
 
 #pragma pack(pop)
@@ -273,12 +284,6 @@ typedef struct {
 typedef enum {
 	SBF_DECODE_SYNC1 = 0,
 	SBF_DECODE_SYNC2,
-	SBF_DECODE_CRC1,
-	SBF_DECODE_CRC2,
-	SBF_DECODE_MSG1,
-	SBF_DECODE_MSG2,
-	SBF_DECODE_LENGTH1,
-	SBF_DECODE_LENGTH2,
 	SBF_DECODE_PAYLOAD,
 } sbf_decode_state_t;
 
@@ -329,13 +334,8 @@ private:
 	struct satellite_info_s *_satellite_info { nullptr };
 	uint8_t _dynamic_model{ 7 };
 	uint64_t _last_timestamp_time{ 0 };
-	bool _got_pos{ false };
-	bool _got_dop{ false };
-	bool _configured{ false };
 	uint8_t _msg_status{ 0 };
 	sbf_decode_state_t _decode_state{};
-	uint16_t _crc{};
-	uint16_t _rx_payload_length{};
 	uint16_t _rx_payload_index{};
 	sbf_buf_t _buf{};
 	gps_abstime _disable_cmd_last{ 0 };
@@ -345,6 +345,7 @@ private:
 	const Interface _interface;
 };
 
-uint16_t crc16(uint8_t *data_p, uint16_t length);
+uint16_t crc16(const uint8_t *buf, uint32_t len);
+
 
 #endif /* SBF_H_ */
