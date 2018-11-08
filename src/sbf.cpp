@@ -43,7 +43,7 @@
 #include "sbf.h"
 #include <string.h>
 
-#define SBF_CONFIG_TIMEOUT    20       // ms, timeout for waiting ACK
+#define SBF_CONFIG_TIMEOUT    500      // ms, timeout for waiting ACK
 #define SBF_PACKET_TIMEOUT    2        // ms, if now data during this delay assume that full update received
 #define DISABLE_MSG_INTERVAL  1000000  // us, try to disable message with this interval
 
@@ -76,6 +76,11 @@ GPSDriverSBF::~GPSDriverSBF()
 int
 GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 {
+	// Check if we're already configured
+	setBaudrate(SBF_TX_CFG_PRT_BAUDRATE);
+	if (receive(SBF_CONFIG_TIMEOUT) > 0)
+		return 0;
+
 	unsigned baud_i;
 
 	_output_mode = output_mode;
@@ -85,17 +90,21 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 		baudrate = baudrates[baud_i];
 		SBF_DEBUG("Try baud rate: %d", baudrate);
 		setBaudrate(baudrate);
-
 		// Change the baudrate
 		char msg[64];
 		snprintf(msg, sizeof(msg), SBF_CONFIG_BAUDRATE, baudrate);
-		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
+
+		if (!sendMessage(msg)) {
 			continue;
 		}
 
 		if (SBF_TX_CFG_PRT_BAUDRATE != baudrate) {
 			setBaudrate(SBF_TX_CFG_PRT_BAUDRATE);
 			baudrate = SBF_TX_CFG_PRT_BAUDRATE;
+		}
+
+		if (!sendMessageAndWaitForAck(SBF_CONFIG_RESET, SBF_CONFIG_TIMEOUT)) {
+			continue;
 		}
 
 		// at this point we have correct baudrate on both ends
@@ -113,9 +122,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
 		}
 
-		if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
-			continue;
-		}
+		sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
 
 		const char *config_cmds = SBF_CONFIG;
 		uint8_t i = 0;
@@ -127,9 +134,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			if (msg[i++] == '\n') {
 				msg[i] = 0;
 
-				if (!sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT)) {
-					break;
-				}
+				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
 
 				i = 0;
 				msg[0] = 0;
@@ -142,10 +147,25 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 	}
 
 	if (baud_i >= sizeof(baudrates) / sizeof(baudrates[0])) {
-//		return -1; // connection and/or baudrate detection failed
+		return -1; // connection and/or baudrate detection failed
 	}
 
 	return 0;
+}
+
+bool
+GPSDriverSBF::sendMessage(const char *msg)
+{
+	SBF_DEBUG("Send MSG: %s", msg);
+
+	// Send message
+	int length = strlen(msg);
+
+	if (write(msg, length) != length) {
+		return false;
+	}
+
+	return true;
 }
 
 bool
@@ -164,30 +184,35 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 	// For all valid set -, get - and exe -commands, the first line of the reply is an exact copy
 	// of the command as entered by the user, preceded with "$R:"
 	char buf[GPS_READ_BUFFER_SIZE];
-	int offset = 0;
-	int n = 1000 / timeout;
+	size_t offset = 0;
+	memset(buf, 0, sizeof(buf));
+	gps_abstime time_started = gps_absolute_time();
+
+	bool found_response = false;
+
 	do {
-		int ret = read(reinterpret_cast<uint8_t*>(buf + offset), sizeof(buf) - offset, timeout);
+		int ret = read(reinterpret_cast<uint8_t*>(buf) + offset, sizeof(buf) - offset, timeout);
 
 		if (ret < 0) {
 			// something went wrong when polling or reading
 			SBF_WARN("sbf poll_or_read err");
 			return false;
 		}
-
 		offset += ret;
-		n--;
-	} while (n >= 0);
-/*
-	if (offset > 0) {
-		SBF_DEBUG("READ: %s", buf);
-	}
-*/
-	if (offset < length + 4 || strncmp(buf, "$R: ", 4)) {
-		return false;
-	}
 
-	return true;
+		if (!found_response && strstr(buf, "$R: ") != NULL) {
+			SBF_DEBUG("READ %d: %s", offset, buf);
+			found_response = true;
+		}
+
+		if (offset >= sizeof(buf)) {
+			offset = 0;
+			memset(buf, 0, sizeof(buf));
+		}
+
+	} while (time_started + 1000 * timeout > gps_absolute_time());
+
+	return found_response;
 }
 
 int    // -1 = error, 0 = no message handled, 1 = message handled, 2 = sat info message handled
@@ -223,8 +248,8 @@ GPSDriverSBF::receive(unsigned timeout)
 			return handled;
 		}
 
-		// abort after timeout if no useful packets received
-		if (time_started + timeout * 1000 < gps_absolute_time()) {
+		// abort after 2s if no useful packets received
+		if (time_started + 2000 * 1000 < gps_absolute_time()) {
 			SBF_DEBUG("timed out, returning");
 			return -1;
 		}

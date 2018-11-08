@@ -51,14 +51,15 @@
 	"setSatelliteTracking, All\n" \
 	"setSatelliteUsage, All\n" \
 	"setElevationMask, All, 10\n" \
-	"setSBFOutput, all, COM1, none, off\n" \
-	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n" \
-	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
-	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
 	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
-	"setSBFOutput, Stream2, Dsk1, Event+Comment, OnChange\n"
+	"setSBFOutput, Stream2, Dsk1, Event+Comment, OnChange\n" \
+	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
 
 #define SBF_CONFIG_BAUDRATE "setCOMSettings, COM1, baud%d\n"
+
+#define SBF_CONFIG_RESET "setSBFOutput, all, COM1, none, off\n"
 
 #define SBF_CONFIG_RECEIVER_DYNAMICS "setReceiverDynamics, %s, UAV\n"
 
@@ -323,6 +324,12 @@ private:
 	 * Reset the parse state machine for a fresh start
 	 */
 	void decodeInit(void);
+
+	/**
+	 * Send a message
+	 * @return true on success, false on write error (errno set)
+	 */
+	bool sendMessage(const char *msg);
 
 	/**
 	 * Send a message and waits for acknowledge
