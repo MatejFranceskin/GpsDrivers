@@ -256,8 +256,10 @@ typedef struct {
 									to the last byte of the block. The generator polynomial for this CRC is the so-called CRC-CCITT
 									polynomial: x 16 + x 12 + x 5 + x 0 . The CRC is computed in the forward direction using a seed of 0, no
 									reverse and no final XOR. */
-	uint16_t msg_id: 13;        /** The ID ﬁeld is a 2-byte block ID, which uniquely identiﬁes the block type and its contents */
-	uint8_t msg_revision: 3;    /** block revision number, starting from 0 at the initial block deﬁnition, and incrementing
+uint16_t msg_id:
+	13;        /** The ID ﬁeld is a 2-byte block ID, which uniquely identiﬁes the block type and its contents */
+uint8_t msg_revision:
+	3;    /** block revision number, starting from 0 at the initial block deﬁnition, and incrementing
                                     each time backwards - compatible changes are performed to the block  */
 	uint16_t length;            /** The Length ﬁeld is a 2-byte unsigned integer containing the size of the SBF block.
                                     It is the total number of bytes in the SBF block including the header.
@@ -291,8 +293,7 @@ typedef enum {
 class GPSDriverSBF : public GPSHelper
 {
 public:
-	GPSDriverSBF(Interface gpsInterface,
-		     GPSCallbackPtr callback, void *callback_user,
+	GPSDriverSBF(GPSCallbackPtr callback, void *callback_user,
 		     struct vehicle_gps_position_s *gps_position,
 		     struct satellite_info_s *satellite_info,
 		     uint8_t dynamic_model);
