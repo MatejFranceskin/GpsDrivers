@@ -297,7 +297,7 @@ public:
 		     struct satellite_info_s *satellite_info,
 		     uint8_t dynamic_model);
 
-	virtual ~GPSDriverSBF();
+	virtual ~GPSDriverSBF() override;
 
 	int receive(unsigned timeout) override;
 
@@ -342,14 +342,10 @@ private:
 	uint8_t _dynamic_model{ 7 };
 	uint64_t _last_timestamp_time{ 0 };
 	uint8_t _msg_status{ 0 };
-	sbf_decode_state_t _decode_state{};
-	uint16_t _rx_payload_index{};
-	sbf_buf_t _buf{};
-	gps_abstime _disable_cmd_last{ 0 };
-	uint16_t _ack_waiting_msg{ 0 };
-	bool _use_nav_pvt{ false };
+	sbf_decode_state_t _decode_state{ SBF_DECODE_SYNC1 };
+	uint16_t _rx_payload_index{ 0 };
+	sbf_buf_t _buf;
 	OutputMode _output_mode{ OutputMode::GPS };
-	const Interface _interface;
 };
 
 uint16_t crc16(const uint8_t *buf, uint32_t len);
