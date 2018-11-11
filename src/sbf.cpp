@@ -64,7 +64,6 @@ GPSDriverSBF::GPSDriverSBF(Interface gpsInterface,
 	, _gps_position(gps_position)
 	, _satellite_info(satellite_info)
 	, _dynamic_model(dynamic_model)
-	, _interface(gpsInterface)
 {
 	decodeInit();
 }
