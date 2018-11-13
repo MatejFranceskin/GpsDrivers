@@ -59,7 +59,7 @@ GPSDriverSBF::GPSDriverSBF(GPSCallbackPtr callback, void *callback_user,
 			   struct vehicle_gps_position_s *gps_position,
 			   struct satellite_info_s *satellite_info,
 			   uint8_t dynamic_model)
-    : GPSBaseStationSupport(callback, callback_user)
+	: GPSBaseStationSupport(callback, callback_user)
 	, _gps_position(gps_position)
 	, _satellite_info(satellite_info)
 	, _dynamic_model(dynamic_model)
@@ -83,8 +83,8 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 
 	unsigned baud_i;
 
-    _output_mode = output_mode;
-    // try different baudrates
+	_output_mode = output_mode;
+	// try different baudrates
 	const unsigned baudrates[] = { 115200, 57600, 38400, 19200, 9600 };
 
 	for (baud_i = 0; baud_i < sizeof(baudrates) / sizeof(baudrates[0]); baud_i++) {
@@ -104,36 +104,36 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			baudrate = SBF_TX_CFG_PRT_BAUDRATE;
 		}
 
-        if (!sendMessageAndWaitForAck(SBF_CONFIG_RESET, SBF_CONFIG_TIMEOUT)) {
+		if (!sendMessageAndWaitForAck(SBF_CONFIG_RESET, SBF_CONFIG_TIMEOUT)) {
 			continue;
 		}
 
 		// at this point we have correct baudrate on both ends
 
-        const char *config_cmds;
+		const char *config_cmds;
 
-        if (_output_mode == OutputMode::RTCM) {
-            config_cmds = SBF_CONFIG_RTCM;
+		if (_output_mode == OutputMode::RTCM) {
+			config_cmds = SBF_CONFIG_RTCM;
 
-        } else {
+		} else {
 
-            if (_dynamic_model < 6) {
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "low");
+			if (_dynamic_model < 6) {
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "low");
 
-            } else if (_dynamic_model < 7) {
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
+			} else if (_dynamic_model < 7) {
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "moderate");
 
-            } else if (_dynamic_model < 8) {
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "high");
+			} else if (_dynamic_model < 8) {
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "high");
 
-            } else {
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
-            }
+			} else {
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RECEIVER_DYNAMICS, "max");
+			}
 
-            sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
+			sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
 
-            config_cmds = SBF_CONFIG;
-        }
+			config_cmds = SBF_CONFIG;
+		}
 
 		uint8_t i = 0;
 		msg[0] = 0;
@@ -153,20 +153,20 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 			config_cmds++;
 		}
 
-        if (_output_mode == OutputMode::RTCM) {
-            if (_base_settings.type == BaseSettingsType::fixed_position) {
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_COORDINATES,
-                         _base_settings.settings.fixed_position.latitude,
-                         _base_settings.settings.fixed_position.longitude,
-                         static_cast<double>(_base_settings.settings.fixed_position.altitude));
-                sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
-                snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_OFFSET, 0.0, 0.0, 0.0);
-                sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
-                sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC, SBF_CONFIG_TIMEOUT);
-            }
-        }
+		if (_output_mode == OutputMode::RTCM) {
+			if (_base_settings.type == BaseSettingsType::fixed_position) {
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_COORDINATES,
+					 _base_settings.settings.fixed_position.latitude,
+					 _base_settings.settings.fixed_position.longitude,
+					 static_cast<double>(_base_settings.settings.fixed_position.altitude));
+				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
+				snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_OFFSET, 0.0, 0.0, 0.0);
+				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
+				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC, SBF_CONFIG_TIMEOUT);
+			}
+		}
 
-        break;
+		break;
 	}
 
 	if (baud_i >= sizeof(baudrates) / sizeof(baudrates[0])) {
@@ -293,11 +293,12 @@ GPSDriverSBF::parseChar(const uint8_t b)
 			SBF_TRACE_PARSER("A");
 			ret = payloadRxAdd(b); // add a payload byte
 			_decode_state = SBF_DECODE_SYNC2;
-        } else if (b == RTCM3_PREAMBLE && _rtcm_parsing) {
-            SBF_TRACE_PARSER("RTCM");
-            _decode_state = SBF_DECODE_RTCM3;
-            _rtcm_parsing->addByte(b);
-        }
+
+		} else if (b == RTCM3_PREAMBLE && _rtcm_parsing) {
+			SBF_TRACE_PARSER("RTCM");
+			_decode_state = SBF_DECODE_RTCM3;
+			_rtcm_parsing->addByte(b);
+		}
 
 		break;
 
@@ -336,14 +337,15 @@ GPSDriverSBF::parseChar(const uint8_t b)
 		}
 
 		break;
-    case SBF_DECODE_RTCM3:
-        if (_rtcm_parsing->addByte(b)) {
-            SBF_DEBUG("got RTCM message with length %i", (int)_rtcm_parsing->messageLength());
-            gotRTCMMessage(_rtcm_parsing->message(), _rtcm_parsing->messageLength());
-            decodeInit();
-        }
 
-        break;
+	case SBF_DECODE_RTCM3:
+		if (_rtcm_parsing->addByte(b)) {
+			SBF_DEBUG("got RTCM message with length %i", (int)_rtcm_parsing->messageLength());
+			gotRTCMMessage(_rtcm_parsing->message(), _rtcm_parsing->messageLength());
+			decodeInit();
+		}
+
+		break;
 	}
 
 	return ret;
@@ -553,11 +555,11 @@ GPSDriverSBF::decodeInit()
 	_decode_state = SBF_DECODE_SYNC1;
 	_rx_payload_index = 0;
 
-    if (_output_mode == OutputMode::RTCM) {
-        if (!_rtcm_parsing) {
-            _rtcm_parsing = new RTCMParsing();
-        }
+	if (_output_mode == OutputMode::RTCM) {
+		if (!_rtcm_parsing) {
+			_rtcm_parsing = new RTCMParsing();
+		}
 
-        _rtcm_parsing->reset();
-    }
+		_rtcm_parsing->reset();
+	}
 }

@@ -58,38 +58,38 @@
 #define SBF_TX_CFG_PRT_BAUDRATE 115200
 
 #define SBF_CONFIG "" \
-    "setDataInOut, COM1, Auto, SBF\n" \
-    "setPVTMode, Rover, All, auto\n" \
-    "setSatelliteTracking, All\n" \
-    "setSatelliteUsage, All\n" \
-    "setElevationMask, All, 10\n" \
-    "setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
-    "setSBFOutput, Stream2, Dsk1, Event+Comment, OnChange\n" \
-    "setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
-    "setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
-    "setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
+	"setDataInOut, COM1, Auto, SBF\n" \
+	"setPVTMode, Rover, All, auto\n" \
+	"setSatelliteTracking, All\n" \
+	"setSatelliteUsage, All\n" \
+	"setElevationMask, All, 10\n" \
+	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
+	"setSBFOutput, Stream2, Dsk1, Event+Comment, OnChange\n" \
+	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
 
 #define SBF_CONFIG_RTCM "" \
-    "setDataInOut, COM1, Auto, RTCMv3\n" \
-    "setPVTMode, Rover, All, auto\n" \
-    "setSatelliteTracking, All\n" \
-    "setSatelliteUsage, All\n" \
-    "setElevationMask, All, 10\n" \
-    "setReceiverDynamics, Moderate, Automotive\n" \
-    "setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
-    "setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
-    "setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
-    "setSBFOutput, Stream1, COM1, PVTGeodetic, msec200\n"
+	"setDataInOut, COM1, Auto, RTCMv3\n" \
+	"setPVTMode, Rover, All, auto\n" \
+	"setSatelliteTracking, All\n" \
+	"setSatelliteUsage, All\n" \
+	"setElevationMask, All, 10\n" \
+	"setReceiverDynamics, Moderate, Automotive\n" \
+	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
+	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec200\n"
 
 #define SBF_CONFIG_RTCM_STATIC "" \
-    "setReceiverDynamics, low, static\n" \
-    "setPVTMode, Static, , Geodetic1\n"
+	"setReceiverDynamics, low, static\n" \
+	"setPVTMode, Static, , Geodetic1\n"
 
 #define SBF_CONFIG_RTCM_STATIC_COORDINATES "" \
-    "setStaticPosGeodetic, Geodetic1, %f, %f, %f\n"
+	"setStaticPosGeodetic, Geodetic1, %f, %f, %f\n"
 
 #define SBF_CONFIG_RTCM_STATIC_OFFSET "" \
-    "setAntennaOffset, Main, %f, %f, %f\n"
+	"setAntennaOffset, Main, %f, %f, %f\n"
 
 #define SBF_SYNC1 0x24
 #define SBF_SYNC2 0x40
@@ -314,7 +314,7 @@ typedef enum {
 	SBF_DECODE_SYNC1 = 0,
 	SBF_DECODE_SYNC2,
 	SBF_DECODE_PAYLOAD,
-    SBF_DECODE_RTCM3
+	SBF_DECODE_RTCM3
 } sbf_decode_state_t;
 
 class GPSDriverSBF : public GPSBaseStationSupport
@@ -323,7 +323,7 @@ public:
 	GPSDriverSBF(GPSCallbackPtr callback, void *callback_user,
 		     struct vehicle_gps_position_s *gps_position,
 		     struct satellite_info_s *satellite_info,
-             uint8_t dynamic_model);
+		     uint8_t dynamic_model);
 
 	virtual ~GPSDriverSBF() override;
 
@@ -374,7 +374,7 @@ private:
 	uint16_t _rx_payload_index{ 0 };
 	sbf_buf_t _buf;
 	OutputMode _output_mode{ OutputMode::GPS };
-    RTCMParsing	*_rtcm_parsing{nullptr};
+	RTCMParsing	*_rtcm_parsing{nullptr};
 };
 
 uint16_t crc16(const uint8_t *buf, uint32_t len);
