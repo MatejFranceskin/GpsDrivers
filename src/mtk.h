@@ -43,6 +43,8 @@
 #include "gps_helper.h"
 #include "../../definitions.h"
 
+#define gps_usleep usleep
+
 #define MTK_SYNC1_V16 0xd0
 #define MTK_SYNC1_V19 0xd1
 #define MTK_SYNC2 0xdd
