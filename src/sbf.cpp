@@ -486,6 +486,18 @@ GPSDriverSBF::payloadRxDone()
 		_rate_count_vel++;
 		_rate_count_lat_lon++;
 		ret = (_msg_status == 7) ? 1 : 0;
+
+		if (_output_mode == OutputMode::RTCM && _base_settings.type == BaseSettingsType::survey_in) {
+			SurveyInStatus status;
+			status.latitude = _gps_position->lat;
+			status.longitude = _gps_position->lon;
+			status.altitude = _gps_position->alt;
+			status.duration = 0;
+			status.mean_accuracy = static_cast<int32_t>(round(sqrt(_gps_position->eph*_gps_position->eph + _gps_position->epv * _gps_position->epv) / 1000));
+			status.flags = 2 | (_buf.payload_pvt_geodetic.mode_type > 0) ? 1 : 0;
+			surveyInStatus(status);
+		}
+
 		break;
 
 	case SBF_ID_VelCovGeodetic:
