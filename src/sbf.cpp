@@ -493,7 +493,7 @@ GPSDriverSBF::payloadRxDone()
 			status.longitude = _gps_position->lon;
 			status.altitude = _gps_position->alt;
 			status.duration = 0;
-			status.mean_accuracy = static_cast<int32_t>(round(sqrt(_gps_position->eph * _gps_position->eph + _gps_position->epv *
+			status.mean_accuracy = static_cast<uint32_t>(roundf(sqrtf(_gps_position->eph * _gps_position->eph + _gps_position->epv *
 					       _gps_position->epv) / 1000));
 			status.flags = 2 | (_buf.payload_pvt_geodetic.mode_type > 0) ? 1 : 0;
 			surveyInStatus(status);
