@@ -34,7 +34,7 @@
 /**
  * @file gps_helper.h
  * @author Thomas Gubler <thomasgubler@student.ethz.ch>
- * @author Julian Oes <joes@student.ethz.ch>
+ * @author Julian Oes <julian@oes.ch>
  */
 
 #pragma once
@@ -122,7 +122,7 @@ struct SurveyInStatus {
 };
 
 // TODO: this number seems wrong
-#define GPS_EPOCH_SECS ((time_t)1234567890ULL)
+#define GPS_EPOCH_SECS (static_cast<time_t>(1234567890ULL))
 
 class GPSHelper
 {
