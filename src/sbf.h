@@ -51,7 +51,7 @@
 
 #define SBF_CONFIG_BAUDRATE SBF_CONFIG_FORCE_INPUT"setCOMSettings, COM1, baud%d\n"
 
-#define SBF_CONFIG_RESET SBF_CONFIG_FORCE_INPUT"setSBFOutput, all, COM1, none, off\n"
+#define SBF_CONFIG_RESET "setSBFOutput, all, COM1, none, off\n"
 
 #define SBF_CONFIG_RECEIVER_DYNAMICS "setReceiverDynamics, %s, UAV\n"
 
@@ -70,19 +70,21 @@
 	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
 
 #define SBF_CONFIG_RTCM "" \
-	"setDataInOut, COM1, Auto, RTCMv3\n" \
+	"setDataInOut, USB1, Auto, RTCMv3\n" \
 	"setPVTMode, Rover, All, auto\n" \
 	"setSatelliteTracking, All\n" \
 	"setSatelliteUsage, All\n" \
 	"setElevationMask, All, 10\n" \
 	"setReceiverDynamics, Moderate, Automotive\n" \
 	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
-	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
-	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
-	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec200\n"
+	"setSBFOutput, Stream3, USB1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream2, USB1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream1, USB1, PVTGeodetic, msec200\n"
 
-#define SBF_CONFIG_RTCM_STATIC "" \
-	"setReceiverDynamics, low, static\n" \
+#define SBF_CONFIG_RTCM_STATIC1 "" \
+	"setReceiverDynamics, Low, Static\n"
+
+#define SBF_CONFIG_RTCM_STATIC2 "" \
 	"setPVTMode, Static, , Geodetic1\n"
 
 #define SBF_CONFIG_RTCM_STATIC_COORDINATES "" \

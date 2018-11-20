@@ -162,7 +162,8 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
 				snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_OFFSET, 0.0, 0.0, 0.0);
 				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
-				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC, SBF_CONFIG_TIMEOUT);
+				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC1, SBF_CONFIG_TIMEOUT);
+				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC2, SBF_CONFIG_TIMEOUT);
 			}
 		}
 
