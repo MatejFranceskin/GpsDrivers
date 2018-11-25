@@ -405,7 +405,7 @@ GPSDriverSBF::payloadRxDone()
 	int ret = 0;
 	struct tm timeinfo;
 	time_t epoch;
-	uint8_t *buf_ptr;
+//	uint8_t *buf_ptr;
 
 	if (_buf.crc16 != crc16(reinterpret_cast<uint8_t *>(&_buf) + 4, _buf.length - 4)) {
 		return 1;
