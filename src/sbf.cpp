@@ -246,6 +246,12 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 int    // -1 = error, 0 = no message handled, 1 = message handled, 2 = sat info message handled
 GPSDriverSBF::receive(unsigned timeout)
 {
+	// Do not receive messages until we're configured
+	if (!_configured) {
+		usleep(timeout * 1000);
+		return 0;
+	}
+
 	uint8_t buf[GPS_READ_BUFFER_SIZE];
 
 	// timeout additional to poll
@@ -256,11 +262,6 @@ GPSDriverSBF::receive(unsigned timeout)
 	while (true) {
 		// Wait for only SBF_PACKET_TIMEOUT if something already received.
 		int ret = read(buf, sizeof(buf), handled ? SBF_PACKET_TIMEOUT : timeout);
-
-		// Discard messages until we're configured
-		if (!_configured) {
-			continue;
-		}
 
 		if (ret < 0) {
 			// something went wrong when polling or reading
