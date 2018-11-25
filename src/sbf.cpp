@@ -522,11 +522,13 @@ GPSDriverSBF::payloadRxDone()
 	case SBF_ID_ChannelStatus:
 		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus");
 
-		if (_satellite_info == NULL) {
+		if (_satellite_info == NULL || (msg_status & 1) != 1) {
 			break;
 		}
 
 		_satellite_info->timestamp = gps_absolute_time();
+		_satellite_info->count = _gps_position->satellites_used;
+/*
 		_satellite_info->count = _buf.payload_channel_status.n;
 		buf_ptr = reinterpret_cast<uint8_t *>(&_buf.payload_channel_status.satinfo);
 
@@ -539,7 +541,7 @@ GPSDriverSBF::payloadRxDone()
 			_satellite_info->snr[i] = 0;
 			buf_ptr += _buf.payload_channel_status.sb1_length + sat_info->n2 * _buf.payload_channel_status.sb2_length;
 		}
-
+*/
 		ret = 2;
 		break;
 
