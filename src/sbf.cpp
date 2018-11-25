@@ -42,6 +42,7 @@
 
 #include "sbf.h"
 #include <string.h>
+#include <math.h>
 
 #define SBF_CONFIG_TIMEOUT    500      // ms, timeout for waiting ACK
 #define SBF_PACKET_TIMEOUT    2        // ms, if now data during this delay assume that full update received
