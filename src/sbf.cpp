@@ -522,7 +522,7 @@ GPSDriverSBF::payloadRxDone()
 	case SBF_ID_ChannelStatus:
 		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus");
 
-		if (_satellite_info == NULL || (msg_status & 1) != 1) {
+		if (_satellite_info == NULL || (_msg_status & 1) != 1) {
 			break;
 		}
 
