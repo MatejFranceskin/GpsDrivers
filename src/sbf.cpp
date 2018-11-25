@@ -186,7 +186,7 @@ GPSDriverSBF::sendMessage(const char *msg)
 	SBF_DEBUG("Send MSG: %s", msg);
 
 	// Send message
-	int length = strlen(msg);
+	int length = static_cast<int>(strlen(msg));
 
 	if (write(msg, length) != length) {
 		return false;
@@ -201,7 +201,7 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 	SBF_DEBUG("Send MSG: %s", msg);
 
 	// Send message
-	int length = strlen(msg);
+	int length = static_cast<int>(strlen(msg));
 
 	if (write(msg, length) != length) {
 		return false;
@@ -228,7 +228,7 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 
 		offset += ret;
 
-		if (!found_response && strstr(buf, "$R: ") != NULL) {
+		if (!found_response && strstr(buf, "$R: ") != nullptr) {
 			SBF_DEBUG("READ %d: %s", offset, buf);
 			found_response = true;
 		}
@@ -522,7 +522,7 @@ GPSDriverSBF::payloadRxDone()
 	case SBF_ID_ChannelStatus:
 		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus");
 
-		if (_satellite_info == NULL || (_msg_status & 1) != 1) {
+		if (_satellite_info == nullptr || (_msg_status & 1) != 1) {
 			break;
 		}
 
