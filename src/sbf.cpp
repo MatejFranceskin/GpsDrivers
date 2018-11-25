@@ -74,6 +74,8 @@ GPSDriverSBF::~GPSDriverSBF()
 int
 GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 {
+	_configured = false;
+
 	// Check if we're already configured
 	setBaudrate(SBF_TX_CFG_PRT_BAUDRATE);
 
@@ -174,6 +176,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 		return -1; // connection and/or baudrate detection failed
 	}
 
+	_configured = true;
 	return 0;
 }
 
@@ -253,6 +256,11 @@ GPSDriverSBF::receive(unsigned timeout)
 	while (true) {
 		// Wait for only SBF_PACKET_TIMEOUT if something already received.
 		int ret = read(buf, sizeof(buf), handled ? SBF_PACKET_TIMEOUT : timeout);
+
+		// Discard messages until we're configured
+		if (!_configured) {
+			continue;
+		}
 
 		if (ret < 0) {
 			// something went wrong when polling or reading

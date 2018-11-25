@@ -370,13 +370,14 @@ private:
 	struct vehicle_gps_position_s *_gps_position { nullptr };
 	struct satellite_info_s *_satellite_info { nullptr };
 	uint8_t _dynamic_model{ 7 };
-	uint64_t _last_timestamp_time{ 0 };
-	uint8_t _msg_status{ 0 };
-	sbf_decode_state_t _decode_state{ SBF_DECODE_SYNC1 };
-	uint16_t _rx_payload_index{ 0 };
+	uint64_t _last_timestamp_time { 0 };
+	bool _configured { false };
+	uint8_t _msg_status { 0 };
+	sbf_decode_state_t _decode_state { SBF_DECODE_SYNC1 };
+	uint16_t _rx_payload_index { 0 };
 	sbf_buf_t _buf;
-	OutputMode _output_mode{ OutputMode::GPS };
-	RTCMParsing	*_rtcm_parsing{nullptr};
+	OutputMode _output_mode { OutputMode::GPS };
+	RTCMParsing	*_rtcm_parsing { nullptr };
 };
 
 uint16_t crc16(const uint8_t *buf, uint32_t len);
