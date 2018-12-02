@@ -50,7 +50,7 @@
 
 /**** Trace macros, disable for production builds */
 #define SBF_TRACE_PARSER(...)   {/*GPS_INFO(__VA_ARGS__);*/}    /* decoding progress in parse_char() */
-#define SBF_TRACE_RXMSG(...)    {/*GPS_INFO(__VA_ARGS__);*/}    /* Rx msgs in payload_rx_done() */
+#define SBF_TRACE_RXMSG(...)    {GPS_INFO(__VA_ARGS__);}    /* Rx msgs in payload_rx_done() */
 
 /**** Warning macros, disable to save memory */
 #define SBF_WARN(...)        {GPS_WARN(__VA_ARGS__);}
@@ -524,13 +524,10 @@ GPSDriverSBF::payloadRxDone()
 	case SBF_ID_ChannelStatus:
 		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus");
 
-		if (_satellite_info == nullptr || (_msg_status & 1) != 1) {
+		if (_satellite_info == nullptr) {
 			break;
 		}
 
-		_satellite_info->timestamp = gps_absolute_time();
-		_satellite_info->count = _gps_position->satellites_used;
-/*
 		_satellite_info->count = _buf.payload_channel_status.n;
 		buf_ptr = reinterpret_cast<uint8_t *>(&_buf.payload_channel_status.satinfo);
 
@@ -543,7 +540,7 @@ GPSDriverSBF::payloadRxDone()
 			_satellite_info->snr[i] = 0;
 			buf_ptr += _buf.payload_channel_status.sb1_length + sat_info->n2 * _buf.payload_channel_status.sb2_length;
 		}
-*/
+		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus end");
 		ret = 2;
 		break;
 
