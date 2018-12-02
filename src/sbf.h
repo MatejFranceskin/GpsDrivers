@@ -70,7 +70,7 @@
 	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
 
 #define SBF_CONFIG_RTCM "" \
-	"setDataInOut, USB1, Auto, RTCMv3\n" \
+	"setDataInOut, USB1, Auto, RTCMv3+SBF\n" \
 	"setPVTMode, Rover, All, auto\n" \
 	"setSatelliteTracking, All\n" \
 	"setSatelliteUsage, All\n" \
