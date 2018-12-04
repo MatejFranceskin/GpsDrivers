@@ -42,6 +42,7 @@
 
 #include "sbf.h"
 #include <string.h>
+#include <math.h>
 
 #define SBF_CONFIG_TIMEOUT    500      // ms, timeout for waiting ACK
 #define SBF_PACKET_TIMEOUT    2        // ms, if now data during this delay assume that full update received
@@ -74,6 +75,8 @@ GPSDriverSBF::~GPSDriverSBF()
 int
 GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 {
+	_configured = false;
+
 	// Check if we're already configured
 	setBaudrate(SBF_TX_CFG_PRT_BAUDRATE);
 
@@ -162,7 +165,8 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
 				snprintf(msg, sizeof(msg), SBF_CONFIG_RTCM_STATIC_OFFSET, 0.0, 0.0, 0.0);
 				sendMessageAndWaitForAck(msg, SBF_CONFIG_TIMEOUT);
-				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC, SBF_CONFIG_TIMEOUT);
+				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC1, SBF_CONFIG_TIMEOUT);
+				sendMessageAndWaitForAck(SBF_CONFIG_RTCM_STATIC2, SBF_CONFIG_TIMEOUT);
 			}
 		}
 
@@ -173,6 +177,7 @@ GPSDriverSBF::configure(unsigned &baudrate, OutputMode output_mode)
 		return -1; // connection and/or baudrate detection failed
 	}
 
+	_configured = true;
 	return 0;
 }
 
@@ -182,7 +187,7 @@ GPSDriverSBF::sendMessage(const char *msg)
 	SBF_DEBUG("Send MSG: %s", msg);
 
 	// Send message
-	int length = strlen(msg);
+	int length = static_cast<int>(strlen(msg));
 
 	if (write(msg, length) != length) {
 		return false;
@@ -197,7 +202,7 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 	SBF_DEBUG("Send MSG: %s", msg);
 
 	// Send message
-	int length = strlen(msg);
+	int length = static_cast<int>(strlen(msg));
 
 	if (write(msg, length) != length) {
 		return false;
@@ -224,7 +229,7 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 
 		offset += ret;
 
-		if (!found_response && strstr(buf, "$R: ") != NULL) {
+		if (!found_response && strstr(buf, "$R: ") != nullptr) {
 			SBF_DEBUG("READ %d: %s", offset, buf);
 			found_response = true;
 		}
@@ -242,6 +247,12 @@ GPSDriverSBF::sendMessageAndWaitForAck(const char *msg, const int timeout)
 int    // -1 = error, 0 = no message handled, 1 = message handled, 2 = sat info message handled
 GPSDriverSBF::receive(unsigned timeout)
 {
+	// Do not receive messages until we're configured
+	if (!_configured) {
+		usleep(timeout * 1000);
+		return 0;
+	}
+
 	uint8_t buf[GPS_READ_BUFFER_SIZE];
 
 	// timeout additional to poll
@@ -521,15 +532,18 @@ GPSDriverSBF::payloadRxDone()
 		_msg_status |= 4;
 		_gps_position->hdop = _buf.payload_dop.hDOP * 0.01f;
 		_gps_position->vdop = _buf.payload_dop.vDOP * 0.01f;
+		// Report # of used satellites here until we find out why ChannelStatus msg is not arriving on base station
+		_satellite_info->timestamp = gps_absolute_time();
+		_satellite_info->count = _gps_position->satellites_used;
+		ret = 2;
 		break;
 
 	case SBF_ID_ChannelStatus:
 		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus");
 
-		if (_satellite_info == NULL) {
+		if (_satellite_info == nullptr) {
 			break;
 		}
-
 		_satellite_info->timestamp = gps_absolute_time();
 		_satellite_info->count = _buf.payload_channel_status.n;
 		buf_ptr = reinterpret_cast<uint8_t *>(&_buf.payload_channel_status.satinfo);
@@ -584,15 +598,15 @@ GPSDriverSBF::reset(GPSRestartType restart_type)
 
 	switch (restart_type) {
 	case GPSRestartType::Hot:
-		res = sendMessageAndWaitForAck(CONFIG_RESET_HOT, SBF_CONFIG_TIMEOUT, false);
+		res = sendMessage(SBF_CONFIG_RESET_HOT);
 		break;
 
 	case GPSRestartType::Warm:
-		res = sendMessageAndWaitForAck(CONFIG_RESET_WARM, SBF_CONFIG_TIMEOUT, false);
+		res = sendMessage(SBF_CONFIG_RESET_WARM);
 		break;
 
 	case GPSRestartType::Cold:
-		res = sendMessageAndWaitForAck(CONFIG_RESET_COLD, SBF_CONFIG_TIMEOUT, false);
+		res = sendMessage(SBF_CONFIG_RESET_COLD);
 		break;
 
 	default:

@@ -70,19 +70,21 @@
 	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec100\n"
 
 #define SBF_CONFIG_RTCM "" \
-	"setDataInOut, COM1, Auto, RTCMv3\n" \
+	"setDataInOut, USB1, Auto, RTCMv3+SBF\n" \
 	"setPVTMode, Rover, All, auto\n" \
 	"setSatelliteTracking, All\n" \
 	"setSatelliteUsage, All\n" \
 	"setElevationMask, All, 10\n" \
 	"setReceiverDynamics, Moderate, Automotive\n" \
 	"setSBFOutput, Stream1, Dsk1, PostProcess, msec100\n" \
-	"setSBFOutput, Stream3, COM1, ChannelStatus, sec1\n" \
-	"setSBFOutput, Stream2, COM1, DOP+VelCovGeodetic, sec1\n" \
-	"setSBFOutput, Stream1, COM1, PVTGeodetic, msec200\n"
+	"setSBFOutput, Stream3, USB1, ChannelStatus, sec1\n" \
+	"setSBFOutput, Stream2, USB1, DOP+VelCovGeodetic, sec1\n" \
+	"setSBFOutput, Stream1, USB1, PVTGeodetic, msec200\n"
 
-#define SBF_CONFIG_RTCM_STATIC "" \
-	"setReceiverDynamics, low, static\n" \
+#define SBF_CONFIG_RTCM_STATIC1 "" \
+	"setReceiverDynamics, Low, Static\n"
+
+#define SBF_CONFIG_RTCM_STATIC2 "" \
 	"setPVTMode, Static, , Geodetic1\n"
 
 #define SBF_CONFIG_RTCM_STATIC_COORDINATES "" \
@@ -377,13 +379,14 @@ private:
 	struct vehicle_gps_position_s *_gps_position { nullptr };
 	struct satellite_info_s *_satellite_info { nullptr };
 	uint8_t _dynamic_model{ 7 };
-	uint64_t _last_timestamp_time{ 0 };
-	uint8_t _msg_status{ 0 };
-	sbf_decode_state_t _decode_state{ SBF_DECODE_SYNC1 };
-	uint16_t _rx_payload_index{ 0 };
+	uint64_t _last_timestamp_time { 0 };
+	bool _configured { false };
+	uint8_t _msg_status { 0 };
+	sbf_decode_state_t _decode_state { SBF_DECODE_SYNC1 };
+	uint16_t _rx_payload_index { 0 };
 	sbf_buf_t _buf;
-	OutputMode _output_mode{ OutputMode::GPS };
-	RTCMParsing	*_rtcm_parsing{nullptr};
+	OutputMode _output_mode { OutputMode::GPS };
+	RTCMParsing	*_rtcm_parsing { nullptr };
 };
 
 uint16_t crc16(const uint8_t *buf, uint32_t len);
