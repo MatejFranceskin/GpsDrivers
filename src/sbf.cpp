@@ -50,7 +50,7 @@
 
 /**** Trace macros, disable for production builds */
 #define SBF_TRACE_PARSER(...)   {/*GPS_INFO(__VA_ARGS__);*/}    /* decoding progress in parse_char() */
-#define SBF_TRACE_RXMSG(...)    {GPS_INFO(__VA_ARGS__);}    /* Rx msgs in payload_rx_done() */
+#define SBF_TRACE_RXMSG(...)    {/*GPS_INFO(__VA_ARGS__);*/}    /* Rx msgs in payload_rx_done() */
 
 /**** Warning macros, disable to save memory */
 #define SBF_WARN(...)        {GPS_WARN(__VA_ARGS__);}
@@ -407,7 +407,7 @@ GPSDriverSBF::payloadRxDone()
 	int ret = 0;
 	struct tm timeinfo;
 	time_t epoch;
-//	uint8_t *buf_ptr;
+	uint8_t *buf_ptr;
 
 	if (_buf.crc16 != crc16(reinterpret_cast<uint8_t *>(&_buf) + 4, _buf.length - 4)) {
 		return 1;
@@ -519,6 +519,10 @@ GPSDriverSBF::payloadRxDone()
 		_msg_status |= 4;
 		_gps_position->hdop = _buf.payload_dop.hDOP * 0.01f;
 		_gps_position->vdop = _buf.payload_dop.vDOP * 0.01f;
+		// Report # of used satellites here until we find out why ChannelStatus msg is not arriving on base station
+		_satellite_info->timestamp = gps_absolute_time();
+		_satellite_info->count = _gps_position->satellites_used;
+		ret = 2;
 		break;
 
 	case SBF_ID_ChannelStatus:
@@ -540,7 +544,7 @@ GPSDriverSBF::payloadRxDone()
 			_satellite_info->snr[i] = 0;
 			buf_ptr += _buf.payload_channel_status.sb1_length + sat_info->n2 * _buf.payload_channel_status.sb2_length;
 		}
-		SBF_TRACE_RXMSG("Rx SBF_ID_ChannelStatus end");
+
 		ret = 2;
 		break;
 
